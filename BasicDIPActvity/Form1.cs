@@ -37,11 +37,11 @@ namespace BasicDIPActvity
 
             // 1. Build grayscale histogram
 
-            for (int col = 0; col < bmp.Width; col++)
+            for (int c = 0; c < bmp.Width; c++)
             {
-                for (int row = 0; row < bmp.Height; row++)
+                for (int r = 0; r < bmp.Height; r++)
                 {
-                    Color pixel = bmp.GetPixel(col, row);
+                    Color pixel = bmp.GetPixel(c, r);
                     int gray = (int)(pixel.R + pixel.G + pixel.B) / 3;
                     histogram[gray]++;
                 }
@@ -97,15 +97,15 @@ namespace BasicDIPActvity
             Color pixel;
             int gray;
 
-            for (int col = 0; col < loaded.Width; col++)
-                for (int row = 0; row < loaded.Height; row++)
+            for (int c = 0; c < loaded.Width; c++)
+                for (int r = 0; r < loaded.Height; r++)
                 {
-                    pixel = loaded.GetPixel(col, row);
+                    pixel = loaded.GetPixel(c, r);
                     gray = (int)(pixel.R + pixel.G + pixel.B) / 3;
                     if (gray < threshold)
-                        processed.SetPixel(col, row, Color.Black);
+                        processed.SetPixel(c, r, Color.Black);
                     else
-                        processed.SetPixel(col, row, Color.White);
+                        processed.SetPixel(c, r, Color.White);
 
                 }
             return processed;
@@ -132,34 +132,34 @@ namespace BasicDIPActvity
 
             // 1. Assign temp labels 
 
-            for (int row = 0; row < processed.Height; row++)
+            for (int r = 0; r < processed.Height; r++)
             {
-                for (int col = 0; col < processed.Width; col++)
+                for (int c = 0; c < processed.Width; c++)
                 {
-                    temp = processed.GetPixel(col, row);
+                    temp = processed.GetPixel(c, r);
                     if (temp.ToArgb() != targetColor.ToArgb()) continue;
 
-                    int left = (col > 0) ? labelMap[col - 1, row] : 0;
-                    int top = (row > 0) ? labelMap[col, row - 1] : 0;
+                    int left = (c > 0) ? labelMap[c - 1, r] : 0;
+                    int top = (r > 0) ? labelMap[c, r - 1] : 0;
 
                     if (left == 0 && top == 0)
                     {
                         // Reassign label
 
-                        labelMap[col, row] = nextLabel;
+                        labelMap[c, r] = nextLabel;
                         nextLabel++;
                     }
                     else if (left != 0 && top == 0)
                     {
-                        labelMap[col, row] = left;
+                        labelMap[c, r] = left;
                     }
                     else if (left == 0 && top != 0)
                     {
-                        labelMap[col, row] = top;
+                        labelMap[c, r] = top;
                     }
                     else
                     {
-                        labelMap[col, row] = Math.Min(left, top);
+                        labelMap[c, r] = Math.Min(left, top);
                         if (left != top)
                             combine(p, left, top);
                     }
@@ -168,12 +168,12 @@ namespace BasicDIPActvity
 
             // 2. Resolve equivalent labels
 
-            for(int row = 0; row < processed.Height; row++)
+            for(int r = 0; r < processed.Height; r++)
             {
-                for(int col = 0; col < processed.Width; col++)
+                for(int c = 0; c < processed.Width; c++)
                 {
-                    if (labelMap[col, row] > 0) 
-                        labelMap[col, row] = findParent(p, labelMap[col, row]);
+                    if (labelMap[c, r] > 0) 
+                        labelMap[c, r] = findParent(p, labelMap[c, r]);
                 }
             }
 
@@ -270,12 +270,12 @@ namespace BasicDIPActvity
             totalCoins = cents5 + cents10 + cents25 + peso1 + peso5;
             totalPesos = (cents5 * 0.05) + (cents10 * 0.10) + (cents25 * 0.25) + (peso1 * 1.00) + (peso5 * 5.00);
 
-            richTextBox1.Text = "Philippine Coin Count Results:\n" +
+            richTextBox1.Text = "=== Philippine Coin Count Results ===\n\n" +
                 $"5 centavos coins: {cents5}\n" +
                 $"10 centavos coins: {cents10}\n" +
                 $"25 centavos coins: {cents25}\n" +
                 $"1 peso coins: {peso1}\n" +
-                $"5 peso coins: {peso5}\n" +
+                $"5 peso coins: {peso5}\n\n" +
                 $"Total number of coins: {totalCoins}\n" +
                 $"Total amount: {totalPesos} Pesos";
 
