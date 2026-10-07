@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -30,9 +30,69 @@ namespace BasicDIPActvity
             InitializeComponent();
         }
 
+        private int computeOtsuThreshold(Bitmap bmp)
+        {
+            int[] histogram = new int[256];
+            int totalPixels = bmp.Width * bmp.Height;
+
+            // 1. Build grayscale histogram
+
+            for (int col = 0; col < bmp.Width; col++)
+            {
+                for (int row = 0; row < bmp.Height; row++)
+                {
+                    Color pixel = bmp.GetPixel(col, row);
+                    int gray = (int)(pixel.R + pixel.G + pixel.B) / 3;
+                    histogram[gray]++;
+                }
+            }
+
+            // 2. Compute total sum of all pixel values
+
+            double sumTotal = 0;
+            for (int t = 0; t < 256; t++)
+            {
+                sumTotal += t * histogram[t];
+            }
+
+            double sumBackground = 0;
+            int weightBackground = 0;
+            double maxVariance = 0;
+            int bestThreshold = 0;
+
+            // 3. Test all possible thresholds from 0 to 255
+
+            for (int t = 0; t < 256; t++)
+            {
+                weightBackground += histogram[t];
+                if (weightBackground == 0) continue;
+
+                int weightForeground = totalPixels - weightBackground;
+                if (weightForeground == 0) break;
+
+                sumBackground += (double)(t * histogram[t]);
+
+                double meanBackground = sumBackground / weightBackground;
+                double meanForeground = (sumTotal - sumBackground) / weightForeground;
+
+                // Between-class variance
+                double betweenClassVariance = (double)weightBackground * (double)weightForeground * Math.Pow(meanBackground - meanForeground, 2);
+
+                if (betweenClassVariance > maxVariance)
+                {
+                    maxVariance = betweenClassVariance;
+                    bestThreshold = t;
+                }
+            }
+
+            return bestThreshold;
+        }
+
         private Bitmap applyBinaryFilter()
         {
-            // utilize binary filter from lecture
+            // Calculate optimal threshold automatically using Otsu's method
+            int threshold = computeOtsuThreshold(loaded);
+
             Bitmap processed = new Bitmap(loaded.Width, loaded.Height);
             Color pixel;
             int gray;
@@ -42,7 +102,7 @@ namespace BasicDIPActvity
                 {
                     pixel = loaded.GetPixel(col, row);
                     gray = (int)(pixel.R + pixel.G + pixel.B) / 3;
-                    if (gray < 200)
+                    if (gray < threshold)
                         processed.SetPixel(col, row, Color.Black);
                     else
                         processed.SetPixel(col, row, Color.White);
@@ -53,7 +113,8 @@ namespace BasicDIPActvity
 
         private int[,] twoPassCCL(Bitmap processed, Color targetColor)
         {
-            // using the two-pass connected component labeling
+            // Using the two-pass connected component labeling
+
             Color temp;
             int w = processed.Width;
             int h = processed.Height;
@@ -69,7 +130,8 @@ namespace BasicDIPActvity
                 p[i] = i;
             }
 
-            // first pass: assign temp labels 
+            // 1. Assign temp labels 
+
             for (int row = 0; row < processed.Height; row++)
             {
                 for (int col = 0; col < processed.Width; col++)
@@ -82,7 +144,8 @@ namespace BasicDIPActvity
 
                     if (left == 0 && top == 0)
                     {
-                        // assign a new label
+                        // Reassign label
+
                         labelMap[col, row] = nextLabel;
                         nextLabel++;
                     }
@@ -103,7 +166,8 @@ namespace BasicDIPActvity
                 }
             }
 
-            // second pass: resolving equaivalent labels
+            // 2. Resolve equivalent labels
+
             for(int row = 0; row < processed.Height; row++)
             {
                 for(int col = 0; col < processed.Width; col++)
@@ -116,12 +180,14 @@ namespace BasicDIPActvity
             return labelMap;
         }
 
-        // denomination classification
+        // Coin classification
+
         private void classifyCoins(List<int> validAreas)
         {
             validAreas.Sort();
 
-            // estimated cutoff values for different sized coins
+            // Estimated cutoff values for different sized coins
+
             foreach(int area in validAreas)
             {
                 if (area < 7900)
@@ -137,7 +203,7 @@ namespace BasicDIPActvity
             }
         }
 
-        // helper functions
+        // Helper functions
         private int findParent(int[] parent, int label)
         {
             if (parent[label] != label) parent[label] = findParent(parent, parent[label]);
@@ -212,6 +278,9 @@ namespace BasicDIPActvity
 
         }
 
-        
+        private void richTextBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
