@@ -230,7 +230,8 @@ namespace BasicDIPActvity
 
         private void button1_Click(object sender, EventArgs e)
         {
-            // reset values first
+            // Ensure values are 0
+
             cents5 = cents10 = cents25 = peso1 = peso5 = 0;
             totalCoins = 0;
             totalPesos = 0;
@@ -240,7 +241,8 @@ namespace BasicDIPActvity
             Bitmap processed = applyBinaryFilter();
             int [,] labelMap = twoPassCCL(processed, Color.Black);
 
-            // measure the pixel area per labeled objects
+            // Measure the pixel area per labeled objects
+
             Dictionary<int, int> coinAreas = new Dictionary<int, int>();
             for (int r = 0; r < processed.Height; r++)
             {
@@ -256,7 +258,8 @@ namespace BasicDIPActvity
                 }
             }
 
-            // filtering out noise in the picture
+            // Filtering out noise from the image
+
             List<int> validAreas = coinAreas.Values
                 .Where(a => a >= 500)
                 .OrderBy(a => a)
@@ -278,9 +281,5 @@ namespace BasicDIPActvity
 
         }
 
-        private void richTextBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
     }
 }
